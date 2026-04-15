@@ -1,19 +1,21 @@
 import {useEffect, useState} from "react";
-import Button from 'react-bootstrap/Button';
-import Card from 'react-bootstrap/Card';
+import MovieCard from '../src/components/MovieCard.jsx'
 
 const ResultsPage = () => {
 
     const [movies, setMovies] = useState ([])
+    const [searchMovies, setSearchMovies] = useState("")
+
+    const options = {
+        method: 'GET',
+        headers: {
+            accept: 'application/json',
+            Authorization: `Bearer ${import.meta.env.VITE_TMDB_API_TOKEN}`
+        }
+    };
 
     useEffect(() => {
-            const options = {
-                method: 'GET',
-                headers: {
-                    accept: 'application/json',
-                    Authorization: `Bearer ${import.meta.env.VITE_TMDB_API_TOKEN}`
-                }
-            };
+
 
             fetch('https://api.themoviedb.org/3/movie/now_playing?language=en-US&page=1', options)
                 .then(res => res.json())
@@ -27,30 +29,39 @@ const ResultsPage = () => {
     },
         [])
 
-    let displayMovies = movies.map(el => {
+    const handleChange = (evt) => {
+        setSearchMovies(evt.target.value)
+        console.log(searchMovies)
+        fetch(`https://api.themoviedb.org/3/search/movie?query=${searchMovies}&include_adult=false&language=en-US&page=1`, options)
+            .then(res => res.json())
+            .then(parsedResponse => {
+                console.log(parsedResponse.results)
+                setMovies(parsedResponse.results)
+            })
+
+            .catch(err => console.error(err));
+    }
+
+    let displayMovies = movies.map((el,index) => {
         return (
-            <Card style={{ width: '18rem' }}>
-                <Card.Img variant="top" src="holder.js/100px180" />
-                <Card.Body>
-                    <Card.Title>{el.title}</Card.Title>
-                    <Card.Text>
-                        Plot: {el.overview}
-                    </Card.Text>
-                    <Card.Text>{el.vote_average}</Card.Text>
-                    <Button variant="primary">Go somewhere</Button>
-                </Card.Body>
-            </Card>
+            <MovieCard key={el.id} data={el}/>
         )
     })
 
     return (
         <div>
             <h2>Results Page</h2>
-            {/*when this loads, we want to see ALL now playing movies!!!!!*/}
-
-        {/*    Need http request for movies*/}
-        {/*    Need to build cards from imported component */}
-
+            <form action="">
+                <label>
+                    <input
+                        type="text"
+                        placeholder={"Enter movie search..."}
+                        onChange={handleChange}
+                        value={searchMovies}
+                    />
+                </label>
+                <button type={"submit"}>Submit</button>
+            </form>
             {displayMovies}
 
 
